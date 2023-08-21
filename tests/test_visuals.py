@@ -1,7 +1,7 @@
-from votekit.visuals.mds import plot_MDS  # type: ignore
+from votekit.plots.mds import plot_MDS  # type: ignore
 from votekit.ballot import Ballot  # type: ignore
 from votekit.profile import PreferenceProfile  # type: ignore
-from votekit.ballot_generator_ import BradleyTerry, PlackettLuce  # type: ignore
+from votekit.ballot_generator import BradleyTerry, PlackettLuce  # type: ignore
 from votekit.metrics.distances import earth_mover_dist  # type: ignore
 from fractions import Fraction
 
@@ -61,35 +61,31 @@ interval2 = {
 }
 
 pl1 = PlackettLuce(
-    number_of_ballots=100,
     candidates=["a", "b", "c"],
     ballot_length=3,
-    pref_interval_by_slate=interval1,
-    slate_voter_prop=voter_proportion_by_race,
+    pref_interval_by_bloc=interval1,
+    bloc_voter_prop=voter_proportion_by_race,
 )
 
 pl2 = PlackettLuce(
-    number_of_ballots=100,
     candidates=["a", "b", "c"],
     ballot_length=3,
-    pref_interval_by_slate=interval2,
-    slate_voter_prop=voter_proportion_by_race,
+    pref_interval_by_bloc=interval2,
+    bloc_voter_prop=voter_proportion_by_race,
 )
 
 bt1 = BradleyTerry(
-    number_of_ballots=100,
     candidates=["a", "b", "c"],
     ballot_length=3,
-    pref_interval_by_slate=interval1,
-    slate_voter_prop=voter_proportion_by_race,
+    pref_interval_by_bloc=interval1,
+    bloc_voter_prop=voter_proportion_by_race,
 )
 
 bt2 = BradleyTerry(
-    number_of_ballots=100,
     candidates=["a", "b", "c"],
     ballot_length=3,
-    pref_interval_by_slate=interval2,
-    slate_voter_prop=voter_proportion_by_race,
+    pref_interval_by_bloc=interval2,
+    bloc_voter_prop=voter_proportion_by_race,
 )
 
 pl1_list = []
@@ -98,11 +94,11 @@ pl2_list = []
 bt1_list = []
 bt2_list = []
 
-for i in range(100):
-    pl1_list.append(pl1.generate_profile())
-    pl2_list.append(pl2.generate_profile())
-    bt1_list.append(bt1.generate_profile())
-    bt2_list.append(bt2.generate_profile())
+for i in range(10):
+    pl1_list.append(pl1.generate_profile(100))
+    pl2_list.append(pl2.generate_profile(100))
+    bt1_list.append(bt1.generate_profile(100))
+    bt2_list.append(bt2.generate_profile(100))
 
 election = {"red": pl1_list, "purple": bt1_list, "blue": pl2_list, "green": bt2_list}
 

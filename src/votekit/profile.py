@@ -6,8 +6,9 @@ import pandas as pd
 
 class PreferenceProfile(BaseModel):
     """
-    ballots (list of ballots): ballots from an election
-    candidates (list): list of candidates, can be user defined
+    Data structure to represent a preference profile, a collection of cast ballots.
+    :param ballots: :class:`list[Ballot]` list of Ballot objects
+    :param candidates: :class:`list` of candidates, can be user defined
     """
 
     ballots: list[Ballot]
@@ -23,6 +24,7 @@ class PreferenceProfile(BaseModel):
     def get_ballots(self) -> list[Ballot]:
         """
         Returns list of ballots
+        :rtype: :class:`list[Ballots]`
         """
         return self.ballots
 
@@ -30,6 +32,7 @@ class PreferenceProfile(BaseModel):
     def get_candidates(self) -> list:
         """
         Returns list of unique candidates
+        :rtype: :class:`list`
         """
         if self.candidates is not None:
             return self.candidates
@@ -43,7 +46,9 @@ class PreferenceProfile(BaseModel):
     # can also cache
     def num_ballots(self):
         """
+        Returns the total number of case ballots.
         Assumes weights correspond to number of ballots given to a ranking
+        :rtype: :class:`Fraction`
         """
         num_ballots = 0
         for ballot in self.ballots:
@@ -53,9 +58,12 @@ class PreferenceProfile(BaseModel):
 
     def to_dict(self, standardize: bool) -> dict:
         """
-        Converts ballots to dictionary with keys tuple(ranking) and values
-        the corresponding total weights \n
-        input: standardize to model an election distribution
+        Converts preference profile to dictionary.
+        Keys: ballot ranking as a string tupple.
+        Values: ballot weights.
+        :param standardize: :class:`bool` Normalizes weights to sum to one.
+        :return: a dictionary representation of a perference profile
+        :rtype: :class:`dict`
         """
         num_ballots = self.num_ballots()
         di: dict = {}
@@ -80,7 +88,8 @@ class PreferenceProfile(BaseModel):
 
     def create_df(self) -> pd.DataFrame:
         """
-        Creates DF for display and building plots
+        Creates a `DataFrame` for display and building plots
+        :rtype: :class:`DataFrame`
         """
         weights = []
         ballots = []
@@ -105,7 +114,11 @@ class PreferenceProfile(BaseModel):
 
     def head(self, n: int, percents: Optional[bool] = False) -> pd.DataFrame:
         """
-        Displays top-n ballots in profile based on weight
+        Displays top-n ballots in profile based on weight.
+        :param n: :class:`int` top n candidates
+        :param percents: optional :class:`bool` use `True` to also display 'voter share'
+        :return: a :class:`DataFrame`
+        :rtype: :class:`DataFrame`
         """
         if self.df.empty:
             self.df = self.create_df()
@@ -119,6 +132,10 @@ class PreferenceProfile(BaseModel):
     def tail(self, n: int, percents: Optional[bool] = False) -> pd.DataFrame:
         """
         Displays bottom-n ballots in profile based on weight
+        :param n: :class:`int` bottom n candidates
+        :param percents: optional :class:`bool` use `True` to also display 'voter share'
+        :return: a :class:`DataFrame`
+        :rtype: :class:`DataFrame`
         """
         if self.df.empty:
             self.df = self.create_df()
@@ -132,6 +149,7 @@ class PreferenceProfile(BaseModel):
     def __str__(self) -> str:
         """
         Displays top 15 or whole profiles
+        :rtype: :class:`str`
         """
         if self.df.empty:
             self.dff = self.create_df()

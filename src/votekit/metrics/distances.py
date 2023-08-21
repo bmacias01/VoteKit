@@ -108,5 +108,4 @@ def em_array(pp: PreferenceProfile):
         float(complete_election_dict[key])
         for key in sorted(complete_election_dict.keys())
     ]
-
     return elect_distr

@@ -186,16 +186,18 @@ def test_rand_transfer_assert():
 
 
 def test_toy_Borda():
-    known_winners = ["{'a'}", "{'d'}", "{'b'}", "{'c'}", "{'e'}"]
+    known_winners = ["a", "d", "b"]
+    known_losers = ["e", "c"]
     ballot_list = [
         Ballot(ranking=[{"a"}, {"b"}, {"c"}, {"d"}, {"e"}], weight=Fraction(100)),
         Ballot(ranking=[{"a"}, {"b"}], weight=Fraction(300)),
         Ballot(ranking=[{"d"}], weight=Fraction(400)),
     ]
     toy_pp = PreferenceProfile(ballots=ballot_list)
-    borda_election = Borda(toy_pp, seats=5)
+    borda_election = Borda(toy_pp, seats=3)
     toy_winners = borda_election.run_borda_election().get_all_winners()
     assert known_winners == toy_winners
+    assert known_losers == borda_election.state.get_all_eliminated()
 
 
 # ---------------------------------------------------------------------------
@@ -223,3 +225,13 @@ def test_toy_rcv():
     seq_RCV = SequentialRCV(profile=toy_pp, seats=2)
     toy_winners = seq_RCV.run_election().get_all_winners()
     assert known_winners == toy_winners
+
+
+ballot_list = [
+    Ballot(ranking=[{"a"}, {"b"}, {"c"}, {"d"}, {"e"}], weight=Fraction(100)),
+    Ballot(ranking=[{"a"}, {"b"}], weight=Fraction(300)),
+    Ballot(ranking=[{"d"}], weight=Fraction(400)),
+]
+toy_pp = PreferenceProfile(ballots=ballot_list)
+borda_election = Borda(toy_pp, seats=3)
+toy_winners = borda_election.run_borda_election().get_all_winners()

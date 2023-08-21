@@ -10,7 +10,7 @@ from collections import namedtuple
 
 class STV:
     """
-    Class for single-winner IRV and multi-winner STV elections
+    Class to run single-winner IRV and multi-winner STV elections.
     """
 
     def __init__(
@@ -21,9 +21,9 @@ class STV:
         quota: str = "droop",
     ):
         """
-        profile (PreferenceProfile): initial perference profile
-        transfer (function): vote transfer method such as fractional transfer
-        seats (int): number of winners/size of committee
+        :param profile: :class:`PreferenceProfile`: initial perference profile
+        :param transfer: (function): vote transfer method such as fractional transfer
+        :param seats: :class:`int`: number of winners/size of committee
         """
         self.__profile = profile
         self.transfer = transfer
@@ -55,12 +55,15 @@ class STV:
     def next_round(self) -> bool:
         """
         Determines if the number of seats has been met to call election
+        :rtype: :class:`bool`
         """
         return len(self.election_state.get_all_winners()) != self.seats
 
     def run_step(self) -> ElectionState:
         """
         Simulates one round an STV election
+        :return: an updated ElectionState
+        :rtype: :class:`ElectionState`
         """
         ##TODO:must change the way we pass winner_votes
         remaining: list[str] = self.election_state.remaining
@@ -115,6 +118,8 @@ class STV:
     def run_election(self) -> ElectionState:
         """
         Runs complete STV election
+        :return: The outcome of an STV election
+        :rtype: :class:`ElectionState`
         """
         if not self.next_round():
             raise ValueError(
@@ -133,13 +138,13 @@ class STV:
 
 class SequentialRCV:
     """
-    class to run Sequential RCV election
+    Class to run a Sequential RCV election
     """
 
     def __init__(self, profile: PreferenceProfile, seats: int):
         """
-        profile (PreferenceProfile): initial perference profile
-        seats (int): number of winners/size of committee
+        :param profile: :class:`PreferenceProfile`
+        :param seats: :class:`int`: number of winners/size of committee
         """
         self.seats = seats
         self.profile = profile
@@ -155,6 +160,8 @@ class SequentialRCV:
         """
         Simulates a single step of the sequential RCV contest
         which is a full IRV election run on the current set of candidates
+        :return: an updated ElectionState
+        :rtype: :class:`ElectionState`
         """
         old_election_state = self.election_state
 
@@ -181,9 +188,11 @@ class SequentialRCV:
         """
         Simulates a complete sequential RCV contest.
         Will run rounds of elections until elected seats fill
+        :return: The outcome of a Sequential RCV election
+        :rtype: :class:`ElectionState`
         """
         old_profile = self.profile
-        elected = []
+        elected = []  # type:ignore
         seqRCV_step = self.election_state
 
         while len(elected) < self.seats:
@@ -206,13 +215,14 @@ class Borda:
         standard: bool = True,
     ):
         """
-        profile (PreferenceProfile): initial perference profile \n
-        seats (int): number of winners/size of committee \n
-        borda_weights: Weights given to each rank. If empty,the weights are
-        a reversed emuterated numbering of candidates with the first ranked candidate
-        getting the most amount of points followed by the second ranked, and third ranked... \n
-        standard: runs a standardized Borda Election. If a voter casts a short ballot, points
-        are fractionally distributed to remaining candidates
+        :param profile: :class:`PreferenceProfile`: election as a perference profile object\n
+        :param seats: :class:`int`: number of winners/size of committee \n
+        :param borda_weights: :class:`list[int]` Weights given to each ranked vote. If empty,
+        defaults weights are assigned which, for n-candidates, gives first places votes
+        n-points, second place votes n-1 points, third place votes n-2 votes,..., last place
+        votes get 1 point.
+        :param standard: Defaults to `True`, runs a standard Borda election.
+        Cast a short ballot points are fractionally distributed to remaining candidates
         """
         self.state = ElectionState(
             curr_round=0,
@@ -235,10 +245,12 @@ class Borda:
 
     def run_borda_step(self) -> ElectionState:
         """
-        Simulates a full Borda election
+        Simulates a full Borda election.
+        :return: Outcome of a Borda Election
+        :rtype: :class:`ElectionState`
         """
         borda_scores = {}  # {candidate : int borda_score}
-        candidates_ballots = {}  # {candidate : [ballots that ranked candidate at all]}
+        candidates_ballots = {}  # type:ignore
         all_candidates = self.state.profile.get_candidates()
 
         # Populates dicts: candidate_rank_freq, candidates_ballots
@@ -246,7 +258,7 @@ class Borda:
             frequency = ballot.weight
             rank = 0
             for candidate in ballot.ranking:
-                candidate = str(candidate)
+                candidate = str(candidate)  # type:ignore
                 if candidate not in candidates_ballots:
                     candidates_ballots[candidate] = []
                 candidates_ballots[candidate].append(
@@ -257,7 +269,9 @@ class Borda:
                 if candidate not in borda_scores:
                     borda_scores[candidate] = 0
                 if (rank + 1) <= len(self.borda_weights):
-                    borda_scores[candidate] += frequency * self.borda_weights[rank]
+                    borda_scores[candidate] += (
+                        frequency * self.borda_weights[rank]
+                    )  # type:ignore
 
                 rank += 1
 
@@ -275,13 +289,13 @@ class Borda:
 
                     # borda_scores[all remaining candidates] = X / Y
                     for candidate in remaining_cands:
-                        candidate = str(set(candidate))
+                        candidate = str(set(candidate))  # type:ignore
                         if candidate not in borda_scores:
-                            borda_scores[candidate] = frequency * (
+                            borda_scores[candidate] = frequency * (  # type:ignore
                                 remaining_points / len(remaining_cands)
                             )
                         else:
-                            borda_scores[candidate] += frequency * (
+                            borda_scores[candidate] += frequency * (  # type:ignore
                                 remaining_points / len(remaining_cands)
                             )
 
@@ -290,6 +304,10 @@ class Borda:
         winners = sorted_borda[: self.seats]
         losers = sorted_borda[self.seats :]
 
+        # reformat winners and losers to be compatible with election types winners/losers list
+        winners_list = [cand.replace("{'", "").replace("'}", "") for cand in winners]
+        losers_list = [cand.replace("{'", "").replace("'}", "") for cand in losers]
+
         # Create winner_votes dict for ElectionState object
         winner_ballots = {}
         for candidate in winners:
@@ -297,8 +315,8 @@ class Borda:
 
         # New final state object
         self.state = ElectionState(
-            elected=winners,
-            eliminated=losers,
+            elected=winners_list,
+            eliminated=losers_list,
             remaining=[],
             profile=self.state.profile,
             curr_round=(self.state.curr_round + 1),
@@ -309,6 +327,7 @@ class Borda:
     def run_borda_election(self) -> ElectionState:
         """
         Function will also run a full borda election
+        :rtype: :class:`ElectionType`
         """
         final_state = self.run_borda_step()
         return final_state
@@ -321,6 +340,9 @@ CandidateVotes = namedtuple("CandidateVotes", ["cand", "votes"])
 def compute_votes(candidates: list, ballots: list[Ballot]) -> list[CandidateVotes]:
     """
     Computes first place votes for all candidates in a preference profile
+    :param candidates: :class:`list` of candidates
+    :param ballots: list of :class:`Ballot` objects
+    :returns: list of number of votes for each candidate
     """
     votes = {}
     for candidate in candidates:
@@ -396,8 +418,8 @@ def seqRCV_transfer(
 ) -> list[Ballot]:
     """
     Useful for a Sequential RCV election which does not use a transfer method ballots \n
-    ballots: list of ballots \n
-    output: same ballot list
+    :param ballots: list of ballots \n
+    :return: same ballot list
     """
     return ballots
 
@@ -405,6 +427,9 @@ def seqRCV_transfer(
 def remove_cand(removed_cand: str, ballots: list[Ballot]) -> list[Ballot]:
     """
     Removes candidate from ranking of the ballots
+    :param removed_cand: :class:`str`: Removes this candidate from ballots
+    :param ballots: list of :class:`Ballot` objects
+    :returns: Updated ballot list
     """
     update = deepcopy(ballots)
 
